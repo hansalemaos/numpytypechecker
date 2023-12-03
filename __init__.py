@@ -2,36 +2,36 @@ import sys
 import numpy as np
 
 
-def dtypecheck(array, filterna=True, float2int=True, dtypes=(np.uint8,
-                                                             np.int8,
-                                                             np.uint16,
-                                                             np.int16,
-                                                             np.uint32,
-                                                             np.int32,
-                                                             np.uint64,
-                                                             np.int64,
-                                                             np.uintp,
-                                                             np.intp,
-                                                             np.float16,
-                                                             np.float32,
-                                                             np.float64,
-                                                             'M',
-                                                             'm',
-                                                             'O',
-                                                             'P',
-                                                             'S',
-                                                             'U',
-                                                             'V',
-                                                             'p',
-                                                             's',
-                                                             np.complex64,
-                                                             np.complex128,
-                                                             np.datetime64,
+def dtypecheck(array, filterna=True, float2int=True, show_exceptions=True, dtypes=(np.uint8,
+                                                                                   np.int8,
+                                                                                   np.uint16,
+                                                                                   np.int16,
+                                                                                   np.uint32,
+                                                                                   np.int32,
+                                                                                   np.uint64,
+                                                                                   np.int64,
+                                                                                   np.uintp,
+                                                                                   np.intp,
+                                                                                   np.float16,
+                                                                                   np.float32,
+                                                                                   np.float64,
+                                                                                   'M',
+                                                                                   'm',
+                                                                                   'O',
+                                                                                   'P',
+                                                                                   'S',
+                                                                                   'U',
+                                                                                   'V',
+                                                                                   'p',
+                                                                                   's',
+                                                                                   np.complex64,
+                                                                                   np.complex128,
+                                                                                   np.datetime64,
 
-                                                             np.timedelta64,
-                                                             np.void, bool, np.bool_,
-                                                             object
-                                                             )):
+                                                                                   np.timedelta64,
+                                                                                   np.void, bool,
+                                                                                   object
+                                                                                   )):
     r"""
     Check and convert the data type of a NumPy array based on a predefined set of data types.
 
@@ -77,33 +77,41 @@ def dtypecheck(array, filterna=True, float2int=True, dtypes=(np.uint8,
     """
     try:
         arr = array.copy()
+        try:
+            hasdot = '.' in str(arr.ravel()[0])
+        except Exception as fe:
+            if show_exceptions:
+                sys.stderr.write(f'{fe}\n')
+                sys.stderr.flush()
+                hasdot = False
         if filterna:
             try:
                 arr = arr[~np.isnan(arr)]
             except Exception as ca:
-                sys.stderr.write(f'{ca}\n')
-                sys.stderr.flush()
+                if show_exceptions:
+                    sys.stderr.write(f'{ca}\n')
+                    sys.stderr.flush()
 
         for dty in dtypes:
             try:
-                if arr.ndim > 1:
+                if arr.ndim > 2:
                     littletest = arr[0].astype(dty)
                     _ = np.all(arr == littletest)
                 nd = arr.astype(dty)
                 if np.all(arr == nd):
                     if not float2int:
-                        if '.' in arr.ravel()[0] and '.' not in arr.ravel()[0]:
-                            continue
+                        if hasdot:
+                            if '.' in str(arr.ravel()[0]) and '.' not in str(nd.ravel()[0]):
+                                continue
 
-                    if filterna:
-                        return array.astype(dty)
                     return array.astype(dty)
             except Exception as fe:
-                sys.stderr.write(f'{fe}\n')
-                sys.stderr.flush()
+                if show_exceptions:
+                    sys.stderr.write(f'{fe}\n')
+                    sys.stderr.flush()
         return array
     except Exception as fe:
-        sys.stderr.write(f'{fe}\n')
-        sys.stderr.flush()
+        if show_exceptions:
+            sys.stderr.write(f'{fe}\n')
+            sys.stderr.flush()
     return array
-
